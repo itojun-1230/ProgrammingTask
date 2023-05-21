@@ -1,0 +1,105 @@
+<html>
+    <head>
+        <title>プログラミング入門課題ツール </title>
+    </head>
+    <header style="background: #2f5fff;" id = "header">
+        <title>プログラミング入門課題 文字数チェッカー</title>
+        <h1 style="font-size: 1.5rem;color: white;">プログラミング入門課題ツール</h1>
+        <p style="text-align:right; color: white;">伊藤 潤平</p>
+    </header>
+    <body>
+        <div id="menu" style="right:0;width: 150px;background-color: #f0f8ff;border: 5px double #5980ff; position: fixed; display: none;">
+            <div style="display: flex;">
+                <p style="color: rgb(0, 0, 0);">●</p>
+                <p style="color: #5c5c5c;">空欄数 :</p>
+                <p style="color: #ff6600;" id ="not_input">0</p>
+                <input style="position:absolute;top:45px;left: 10px;height:30px;" type="button" value="スクリプト生成" onclick="onButtonClick();" />
+                <textarea id ="copy" style="display: none"></textarea>
+            </div>
+            <br>
+        </div>
+        <div id = "div">
+            <textarea id="text"
+            style="
+            resize: none;
+            width:500px;
+            height:600px;">
+            </textarea>
+            <input style="position:absolute;top:550px;left:600px;width:100px;height:60px;" type="button" value="確定" onclick="onButtonClick();" />
+        </div>
+        <script>
+            let not_input = 0       //埋められていない枠の数
+            let flag = 0
+            window.onload=function(){       //初期実行
+                text = "使い方:\n1.\n　プログラミング入門演習のレポートを開く\n2.\n　ctrl+Aで全選択し、コピーする\n3.\n　ここにペーストする\n4.\n　確定ボタンをクリック\n5.\n　空欄を埋める\n※これより下は未検証\n6.\n　スクリプト生成をクリック\n7.\n　プログラミング入門演習の小テストを開く\n8.\n　F12をクリックしコンソールを開く\n9.\n　スクリプトをペーストしてEnter";
+
+                document.getElementById("text").placeholder = text
+                document.getElementById("text").value = '';     //謎空白削除
+            }
+            function counter(e){
+                target = e.target
+                max = target.getAttribute("maxlength")
+                if(max < target.value.length)target.value = target.value.substr(0,max)      //オーバーした文字を削除
+                if(max == target.value.length && target.style.backgroundColor != "rgb(255, 117, 117)"){     //文字数最大 & すでに最大判定を受けていない場合
+                    target.style.backgroundColor = "#ff7575";
+                    not_input--;
+                }
+                if(max != target.value.length && target.style.backgroundColor == "rgb(255, 117, 117)"){     //文字数最大ではない & すでに最大判定を受けている場合
+                    target.style.backgroundColor = "#ffffff";
+                    not_input++;
+                }
+                document.getElementById("not_input").textContent = not_input;   //埋められていない枠の数を代入
+            }
+            function onButtonClick(){
+                if(flag == 0){
+                    texts = document.getElementById("text").value.split("\n");      //改行削除
+                    div = document.getElementById("div");
+                    for(let i=div.childNodes.length-1;i>=0;i--)div.removeChild(div.childNodes[i]);  //初期の要素を削除
+                    for(let i=0;i<texts.length;i++){        //一行ずつ判定する
+                        if(texts[i][0] == "#")flag = 1
+                        if(texts[i+4] == "添付ファイル\t")flag = 2
+                        if(flag == 1){
+                            for(let l=0;l<texts[i].length;l++){
+                            let count = 0
+                                if(texts[i][l] =='O'){
+                                    for(let t=0;texts[i][l+t]=='O';t++)count++  //Oの数をカウント
+                                    const box = document.createElement("input");
+                                    box.setAttribute("type", "text");       //typeをセット
+                                    box.setAttribute("maxlength", count);   //最大文字数をセット
+                                    box.setAttribute("size", count*2);         //sizeをセット
+                                    box.setAttribute("backgroundColor", "#ffffff"); //色をセット
+                                    box.setAttribute("id", "q"+i*1000+l);   //個別のidをセット
+                                    box.setAttribute("class", "input");   //個別のidをセット
+                                    let O_count = '';
+                                    for(let t=0;t<count;t++)O_count += "O"  //連続するOの文字列を作成
+                                    box.setAttribute("placeholder", O_count)    //プレイスホルダーをセット
+                                    div.appendChild(box);
+                                    document.getElementById("q"+i*1000+l).addEventListener('input', counter);   //テキストボックス変更時にcounter関数を実行
+                                    l = l + count - 1;  //連続するOの分飛ばす
+                                    not_input++;
+                                }else{
+                                    if(texts[i][l] == " ")div.insertAdjacentHTML('beforeend', '&nbsp;');
+                                    if(texts[i][l] != " ")div.insertAdjacentHTML('beforeend', texts[i][l]);
+                                }
+                            }
+                            div.appendChild(document.createElement("br"));  //改行
+                        }
+                    }
+                    document.getElementById("not_input").textContent = not_input;   //埋められていない枠の数を代入
+                    document.getElementById("menu").style.display = "inline"          //表示
+                }else if (flag == 2 && not_input == 0){
+                    result = window.confirm("クリップボードを上書きします\nよろしいですか？")
+                    if (result == true){
+                        output = ""
+                        document.getElementById("copy").style.display= "flex"
+                        for(let i=0;i<document.getElementsByClassName("input").length;i++)output += "document.getElementsByClassName('queryinput editable')["+i+"].value ='" + document.getElementsByClassName("input")[i].value +"';"
+                        document.getElementById("copy").value = output + "document.getElementsByClassName('proceed')[0].click();"
+                        document.getElementById("copy").select();
+                        document.execCommand("copy");
+                        document.getElementById("copy").style.display= "none"
+                    }
+                }else if (flag == 2 && not_input != 0)alert("空欄があります")
+            }
+        </script>
+    </body>
+</html>
